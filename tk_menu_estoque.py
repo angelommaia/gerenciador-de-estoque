@@ -40,26 +40,51 @@ class Application(Frame):
 		for col in range(5):
 			self.master.columnconfigure(col, weight=1)
 		
+		#funcao para mostrar o banco em nova janela
 		def mostrar_banco():
 			import sqlite3
-			my_conn = sqlite3.connect('./banco.db')
-			r_set = my_conn.execute('''SELECT * from estoque LIMIT 0,20''');
+			import tkinter as tk
+			import tkinter.ttk as ttk
+			
+			#abrindo nova janela pra mostrar o banco
 			newWindow = Toplevel()
-			i = 0
-			for estoque in r_set: 
-				for j in range(len(estoque)):
-					e = Entry(newWindow, width=15, fg='blue') 
-					e.grid(row=i, column=j) 
-					e.insert(END, estoque[j])
-				i=i+1
+			
+			headings = ("Nome", "Preço", "Descrição", "Data de Inclusão")
+			
+			#buscando dados no banco
+			with sqlite3.connect('banco.db') as connection:
+				cursor = connection.cursor()
+				cursor.execute("SELECT * FROM estoque")
+				data = (row for row in cursor.fetchall())
+
+			tree=ttk.Treeview(newWindow) #inicializando uma treeview na nova janela
+			tree["columns"]=headings #o nome de cada coluna sera 1 elemento de headings
+			
+			#adicionando headings na treeview
+			for head in headings:
+				tree.heading(head, text=head, anchor=tk.CENTER)
+				tree.column(head, anchor=tk.CENTER)
+			
+			#adicionando dados nas linhas
+			for row in data:
+				tree.insert('', tk.END, values=row)
+			
+			#colocando uma barra lateral para navegação
+			scrolltable = tk.Scrollbar(newWindow, command=tree.yview) 
+			tree.configure(yscrollcommand=scrolltable.set)
+			scrolltable.pack(side=tk.RIGHT, fill=tk.Y)
+			tree.pack(expand=tk.YES, fill=tk.BOTH)
+	
+		#botao para mostrar o banco
 		btn_mostrar_banco = Button(master, text = "Mostrar Banco", command = mostrar_banco)
 		btn_mostrar_banco.grid(column=1, row=3, sticky="e")
 		
-		#falta apenas puxar os dados das entrys, em uma nova janela (ou não)
-		def adc_item_ao_banco():
+		
+		#funcao para adicionar itens ao banco
+		def adc_item_ao_banco():  #falta apenas puxar os dados das entrys, em uma nova janela (ou não) #falta tbm usar a funcao q o Lucas fez
+			
+			#USAR FUNCAO DO LUCAS DPS
 			import sqlite3
-			from business.estoque_business import EstoqueBusiness
-			estoque_business = EstoqueBusiness()
 			conn = sqlite3.connect('./banco.db')
 			cursor = conn.cursor()
 			nome_item = 'abroba'
@@ -75,7 +100,18 @@ class Application(Frame):
 			conn.close()
 			
 		btn_adc_item_ao_banco = Button(master, text = "Adicionar Item", command = adc_item_ao_banco)
-		btn_adc_item_ao_banco.grid(column=1, row=2, sticky="e")
+		btn_adc_item_ao_banco.grid(column=1, row=1, sticky="e")
+		
+		#falta apenas puxar os dados das entrys, em uma nova janela (ou não)
+		def remover_item_do_banco():
+			import sqlite3
+			from business.estoque_business import EstoqueBusiness
+
+			
+		btn_remover_item_do_banco = Button(master, text = "Remover Item", command = remover_item_do_banco)
+		btn_remover_item_do_banco.grid(column=1, row=2, sticky="e")
+		
+		
 root = Tk()
 
 w=400
